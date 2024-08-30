@@ -38,18 +38,36 @@ class AuthController extends Controller
 
         try {
             $user = User::where("email", $payload["email"])->first();
-            if ($user) {
-                if (!Hash::check($payload["password"], $user->password)) {
-                    return response()->json(["status" => 401, "message" => "Invalid Credentials"]);
-                }
-
-                $token = $user->createToken("web")->plainTextToken;
-                $authRes = array_merge($user->toArray(), ["token" => $token]);
-
-                return response()->json(["message" => "Logged in successfully!", "user" => $authRes]);
+            if (!$user || !Hash::check($payload["password"], $user->password)) {
+                return response()->json(["message" => "Invalid Credentials"], 401);
             }
+
+            $token = $user->createToken("web")->plainTextToken;
+            $authRes = array_merge($user->toArray(), ["token" => $token]);
+
+            return response()->json(["message" => "Logged in successfully!", "user" => $authRes]);
         } catch (\Exception $err) {
             Log::info("Login error => " . $err->getMessage());
+            return response()->json(["message" => "Something went wrong!"], 500);
+        }
+    }
+
+    public function checkCredentials(Request $request)
+    {
+        $payload = $request->validate([
+            "email" => "required|email",
+            "password" => "required"
+        ]);
+
+        try {
+            $user = User::where("email", $payload["email"])->first();
+            if (!$user || !Hash::check($payload["password"], $user->password)) {
+                return response()->json(["message" => "Invalid Credentials"], 401);
+            }
+
+            return response()->json(["status" => 200, "message" => "Logged in successfully!"]);
+        } catch (\Exception $err) {
+            Log::info("Login Credentials error => " . $err->getMessage());
             return response()->json(["message" => "Something went wrong!"], 500);
         }
     }
