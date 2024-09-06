@@ -1,11 +1,13 @@
 <?php
 
+use App\Events\PostEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\UserController;
+use App\Models\Post;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -23,3 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/checkCredentials', [AuthController::class, 'checkCredentials']);
 Route::post('/auth/register', [AuthController::class, 'register']);
+
+Route::post('/post/channel', function() {
+    $post = Post::select("*")->with("user")->orderByDesc("id")->first();
+    PostEvent::dispatch($post);
+    return response()->json(["message" => "Data sent to client"]);
+});
