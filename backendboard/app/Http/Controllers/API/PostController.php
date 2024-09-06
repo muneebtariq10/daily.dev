@@ -15,7 +15,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::select()->orderByDesc("id")->cursorPaginate(20);
+        $posts = Post::select()->with("user")->orderByDesc("id")->cursorPaginate(20);
 
         return response()->json($posts);
     }
