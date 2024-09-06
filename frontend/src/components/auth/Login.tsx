@@ -6,7 +6,7 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import myAxios from '@/lib/axios.config';
-import { CHECK_CREDENTIALS } from '@/lib/apiEndpoints';
+import { CHECK_CREDENTIALS } from '@/lib/apiEndPoints';
 import { toast } from 'react-toastify';
 import { signIn } from 'next-auth/react';
 
