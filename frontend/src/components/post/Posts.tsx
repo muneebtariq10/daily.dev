@@ -1,24 +1,38 @@
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useEffect } from "react"
+import { useImmer } from "use-immer"
 import PostCard from "./PostCard"
 import { LaraEcho } from "@/lib/echo.config"
+import { CustomUser } from "@/app/api/auth/[...nextauth]/authOptions"
 
-export default function Posts({ data }: { data: apiResponsePost<PostType> }) {
-    const [posts, setPosts] = useState<apiResponsePost<PostType>>(data)
+export default function Posts({ data, user }: { data: apiResponsePost<PostType>, user:CustomUser }) {
+    const [posts, setPosts] = useImmer<apiResponsePost<PostType>>(data)
 
     useEffect(() => {
-        LaraEcho.channel("channel-post")
-            .listen("PostEvent", (event:any) => {
+        // const pvt_lara_echo = pvtLaraEcho(user.token!);
+        // pvt_lara_echo.private(`App.Models.User.${user.id}`).listen("PostEvent", (event:any) => {
+        //     console.log("post", event);
+        // });
+
+        // return () => {
+        //     pvt_lara_echo.leave(`App.Models.User.${user.id}`)
+        // }
+        LaraEcho.channel("post-broadcast")
+            .listen("PostBroadcastEvent", (event:any) => {
                 console.log("post", event)
+                const post:PostType = event.post
+                setPosts((prevState) => {
+                    prevState.data = [post, ...prevState.data]
+                })
             })
         
         return () => {
-            LaraEcho.leave("channel-post")
+            LaraEcho.leave("post-broadcast")
         }
     }, [])
 
     return (
-        <div className="pt-4 p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        <div className="pt-4 p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {
                 posts.data &&
                 posts.data.length > 0 &&

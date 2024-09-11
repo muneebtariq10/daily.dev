@@ -12,14 +12,13 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PostEvent implements ShouldBroadcastNow
+class PostBroadcastEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-
     public $post;
 
     public function __construct(Post $post)
@@ -32,11 +31,8 @@ class PostEvent implements ShouldBroadcastNow
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
-    public function broadcastOn(): array
+    public function broadcastOn(): Channel
     {
-        return [
-            // new PrivateChannel('App.Models.User.'.$this->post->user->id),
-            new Channel('channel-post')
-        ];
+        return new Channel("post-broadcast");
     }
 }

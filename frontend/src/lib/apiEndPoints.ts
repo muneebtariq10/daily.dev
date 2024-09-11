@@ -7,3 +7,4 @@ export const REGISTER_URL = "/auth/register";
 export const CHECK_CREDENTIALS = "/auth/checkCredentials";
 export const UPDATE_PROFILE = "/update/profile";
 export const POST_URL = "/post";
+export const COMMENT_URL = "/comment";

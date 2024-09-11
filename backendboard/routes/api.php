@@ -1,13 +1,15 @@
 <?php
 
-use App\Events\PostEvent;
+use App\Events\PostBroadcastEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\UserController;
 use App\Models\Post;
+use Illuminate\Support\Facades\Broadcast;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -18,7 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update/profile', [UserController::class, 'updateProfileImage']);
 
     Route::apiResources([
-        "post" => PostController::class
+        "post" => PostController::class,
+        "comment" => CommentController::class
     ]);
 });
 
@@ -28,6 +31,9 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 
 Route::post('/post/channel', function() {
     $post = Post::select("*")->with("user")->orderByDesc("id")->first();
-    PostEvent::dispatch($post);
+    // PostEvent::dispatch($post);
+    PostBroadcastEvent::dispatch($post);
     return response()->json(["message" => "Data sent to client"]);
 });
+
+Broadcast::routes(["middleware" => ["auth:sanctum"]]);

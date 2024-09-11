@@ -10,7 +10,7 @@ export default async function App() {
 
     return (
 		<div>
-			<Posts data={posts} />
+			<Posts data={posts} user={session?.user!} />
 		</div>
     );
 }
