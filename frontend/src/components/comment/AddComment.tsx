@@ -2,9 +2,52 @@ import React, { useState } from "react"
 import { Button } from "../ui/button"
 import UserAvatar from "../common/UserAvatar"
 import { Textarea } from "../ui/textarea"
+import { useSession } from "next-auth/react"
+import { CustomUser } from "@/app/api/auth/[...nextauth]/authOptions"
+import myAxios from "@/lib/axios.config"
+import { COMMENT_URL } from "@/lib/apiEndPoints"
+import { toast } from "react-toastify"
 
 export default function AddComment({post}:{post:PostType}) {
     const [showBox, setShowBox] = useState(true)
+    const { data } = useSession()
+    const user: CustomUser = data?.user as CustomUser
+    const [comment, setComment] = useState("")
+    const [errors, setErrors] = useState({
+        post_id: [],
+        comment: []
+    })
+    const [loading, setLoading] = useState(false)
+
+    const addComment = (event:React.FormEvent) => {
+        event.preventDefault()
+        setLoading(true)
+
+        myAxios.post(COMMENT_URL, {
+            comment,
+            post_id: post.id
+        }, {
+            headers: {
+                Authorization: `Bearer ${user.token}`
+            }
+        })
+            .then((res) => {
+                const response = res.data
+                setLoading(false)
+                setComment("")
+                console.log(response)
+                toast.success(response.message)
+            })
+            .catch((err) => {
+                setLoading(false)
+                if (err.response?.status === 422) {
+                    setErrors(err.response?.data.errors)
+                } else {
+                    toast.error("Something went wrong.")
+                }
+            })
+    }
+
     return (
         <div className="my-4">
             {
@@ -19,12 +62,12 @@ export default function AddComment({post}:{post:PostType}) {
                     </div>
                     :
                     <div>
-                        <form>
+                        <form onSubmit={addComment}>
                             <div className="mb-4">
-                                <Textarea placeholder="Type your thoughts..."></Textarea>
+                                <Textarea placeholder="Type your thoughts..." value={comment} onChange={(e) => setComment(e.target.value)} />
                             </div>
                             <div className="mb-2 flex justify-end">
-                                <Button>Post Comment</Button>
+                                <Button disabled={loading}>{loading ? "Processing..." : "Post Comment"}</Button>
                             </div>
                         </form>
                         
