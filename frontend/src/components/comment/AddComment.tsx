@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "../ui/button"
 import UserAvatar from "../common/UserAvatar"
 import { Textarea } from "../ui/textarea"
@@ -7,6 +7,7 @@ import { CustomUser } from "@/app/api/auth/[...nextauth]/authOptions"
 import myAxios from "@/lib/axios.config"
 import { COMMENT_URL } from "@/lib/apiEndPoints"
 import { toast } from "react-toastify"
+import CommentCard from "./CommentCard"
 
 export default function AddComment({post}:{post:PostType}) {
     const [showBox, setShowBox] = useState(true)
@@ -18,6 +19,11 @@ export default function AddComment({post}:{post:PostType}) {
         comment: []
     })
     const [loading, setLoading] = useState(false)
+    const [comments, setComments] = useState<apiResponsePost<CommentType>>()
+
+    useEffect(() => {
+        fetchComments()
+    }, [])
 
     const addComment = (event:React.FormEvent) => {
         event.preventDefault()
@@ -34,8 +40,22 @@ export default function AddComment({post}:{post:PostType}) {
             .then((res) => {
                 const response = res.data
                 setLoading(false)
+                setComments((prevState) => {
+                    if (prevState) {
+                        if (prevState?.data.length == 0) {
+                            return {
+                                ...prevState,
+                                data: [response.comment]
+                            }
+                        } else {
+                            return {
+                                ...prevState,
+                                data: [response.comment, ...prevState.data]
+                            }
+                        }
+                    }
+                })
                 setComment("")
-                console.log(response)
                 toast.success(response.message)
             })
             .catch((err) => {
@@ -48,31 +68,47 @@ export default function AddComment({post}:{post:PostType}) {
             })
     }
 
+    const fetchComments = () => {
+        myAxios.get(`${COMMENT_URL}?post_id=${post.id}`, {
+            headers: {
+                Authorization: `Bearer ${user.token}`
+            }
+        }).then((res) => {
+            setComments(res.data)
+        })
+        .catch((err) => {
+            toast.error("Something went wrong")
+        })
+    }
+
     return (
         <div className="my-4">
-            {
-                showBox
-                    ?
-                    <div className="border rounded-xl flex justify-between items-center p-3" onClick={() => setShowBox(false)}>
-                        <div className="flex space-x-4 items-center">
-                            <UserAvatar image={post.user.image} />
-                            <p className="text-muted-foreground text-sm">Share your thoughts...</p>
+            {showBox ? (
+                <div className="border rounded-xl flex justify-between items-center p-3" onClick={() => setShowBox(false)}>
+                    <div className="flex space-x-4 items-center">
+                        <UserAvatar image={post.user.image} />
+                        <p className="text-muted-foreground text-sm">Share your thoughts...</p>
+                    </div>
+                    <Button variant="outline">Post</Button>
+                </div>
+            ) : (
+                <div>
+                    <form onSubmit={addComment}>
+                        <div className="mb-4">
+                            <Textarea placeholder="Type your thoughts..." value={comment} onChange={(e) => setComment(e.target.value)} />
+                            <span className="text-red-500">{errors.comment?.[0]}</span>
                         </div>
-                        <Button variant="outline">Post</Button>
-                    </div>
-                    :
-                    <div>
-                        <form onSubmit={addComment}>
-                            <div className="mb-4">
-                                <Textarea placeholder="Type your thoughts..." value={comment} onChange={(e) => setComment(e.target.value)} />
-                            </div>
-                            <div className="mb-2 flex justify-end">
-                                <Button disabled={loading}>{loading ? "Processing..." : "Post Comment"}</Button>
-                            </div>
-                        </form>
-                        
-                    </div>
-            }
+                        <div className="mb-2 flex justify-end">
+                            <Button disabled={loading}>{loading ? "Processing..." : "Post Comment"}</Button>
+                        </div>
+                    </form>
+                    
+                </div>
+            )}
+
+            <div className="my-4">
+                {comments?.data && comments.data.length > 0 && comments.data.map((item, index) => <CommentCard key={index} comment={item} />)}
+            </div>
         </div>
     )
 }

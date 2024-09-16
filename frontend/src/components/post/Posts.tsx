@@ -25,6 +25,14 @@ export default function Posts({ data, user }: { data: apiResponsePost<PostType>,
                     prevState.data = [post, ...prevState.data]
                 })
             })
+            .listen("CommentCountEvent", (event:any) => {
+                setPosts((prevState) => {
+                    const index = prevState.data.findIndex((item) => item.id === event.post_id)
+                    if (index !== -1) {
+                        prevState.data[index].comment_count += 1
+                    }
+                })
+            })
         
         return () => {
             LaraEcho.leave("post-broadcast")
@@ -32,7 +40,7 @@ export default function Posts({ data, user }: { data: apiResponsePost<PostType>,
     }, [])
 
     return (
-        <div className="pt-4 p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+        <div className="pt-4 p-2 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4" style={{height: "90vh"}}>
             {
                 posts.data &&
                 posts.data.length > 0 &&

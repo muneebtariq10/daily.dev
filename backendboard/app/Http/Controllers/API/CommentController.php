@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Events\CommentCountEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\Post;
@@ -35,6 +36,8 @@ class CommentController extends Controller
 
             Post::where("id", $payload["post_id"])->increment("comment_count", 1);
             $comment = Comment::create($payload)->with("user")->orderByDesc("id")->first();
+
+            CommentCountEvent::dispatch($payload["post_id"]);
 
             return response()->json(["comment" => $comment, "message" => "Comment added successfully!"]);
         } catch (\Exception $err) {

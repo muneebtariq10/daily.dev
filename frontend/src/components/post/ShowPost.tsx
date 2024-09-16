@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"  
 import Image from "next/image"
 import AddComment from "../comment/AddComment"
+import { formatDate } from "@/lib/utils"
 
 export default function ShowPost({children, post}:{children:React.ReactNode, post:PostType}) {
     const [open, setOpen] = useState(false)
@@ -19,7 +20,7 @@ export default function ShowPost({children, post}:{children:React.ReactNode, pos
                 </DialogTrigger>
                 <DialogContent className="w-full lg:min-w-[700px] max-h-screen overflow-y-scroll">
                     <DialogHeader>
-                        <DialogTitle>Posted by {post.user.name} on {post.created_at}</DialogTitle>
+                        <DialogTitle>Posted by {post.user.name} on {formatDate(post.created_at)}</DialogTitle>
                     </DialogHeader>
                     <div>
                         <h1 className="text-3xl font-bold">{post.title}</h1>
